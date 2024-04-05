@@ -1,2 +1,2 @@
-# slack_attendance_management_bot
-🙇現在整備中です
+# スラック上で勤怠管理を簡略化するアプリ
+以下がアプリの簡単な動作です。
