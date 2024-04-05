@@ -1,0 +1,182 @@
+{
+	"type": "modal",
+	"title": {
+		"type": "plain_text",
+		"text": ":gear:設定",
+		"emoji": true
+	},
+	"submit": {
+		"type": "plain_text",
+		"text": "Submit",
+		"emoji": true
+	},
+	"close": {
+		"type": "plain_text",
+		"text": "Cancel",
+		"emoji": true
+	},
+	"blocks": [
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": ":globe_with_meridians: 言語設定",
+				"emoji": true
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*主要な言語を選択してください*"
+			},
+			"accessory": {
+				"type": "static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "言語を選択",
+					"emoji": true
+				},
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "英語",
+							"emoji": true
+						},
+						"value": "english"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "日本語",
+							"emoji": true
+						},
+						"value": "japanese"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "中国語",
+							"emoji": true
+						},
+						"value": "chinese"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "スペイン語",
+							"emoji": true
+						},
+						"value": "spanish"
+					}
+				]
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": ":bell: チャンネル設定",
+				"emoji": true
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*報告用のチャンネルを選択してください*"
+			},
+			"accessory": {
+				"type": "channels_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "チャンネルを選択",
+					"emoji": true
+				},
+				"action_id": "report_channel_select"
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*請求書用のチャンネルを選択してください*"
+			},
+			"accessory": {
+				"type": "channels_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "チャンネルを選択",
+					"emoji": true
+				},
+				"action_id": "invoice_channel_select"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": ":clipboard:データベースURL設定",
+				"emoji": true
+			}
+		},
+		{
+			"type": "input",
+			"element": {
+				"type": "url_text_input",
+				"action_id": "url_text_input-action"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "勤怠管理用データベースのURLのIDを入力してください",
+				"emoji": true
+			}
+		},
+		{
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "sheet_name_input-action"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Googleシートのシート名を入力してください",
+				"emoji": true
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": ":loudspeaker:報告者設定",
+				"emoji": true
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*上長（メンションする人）を選択してください*"
+			},
+			"accessory": {
+				"type": "users_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "ユーザーを選択",
+					"emoji": true
+				},
+				"action_id": "user_select_action"
+			}
+		}
+	]
+}

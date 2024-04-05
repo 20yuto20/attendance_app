@@ -1,0 +1,104 @@
+{
+	"type": "home",
+	"blocks": [
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "🕒 Kotonaru勤怠管理",
+				"emoji": true
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "勤怠管理アプリへようこそ！こちらでは、日々の業務開始・終了時間、休憩時間の記録が簡単にできます。\n\n*主な機能：*\n- 業務開始・終了の記録\n- 休憩開始・終了の記録\n- 設定のカスタマイズ\n- 勤務時間の統計閲覧"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "⏱ 勤怠記録",
+				"emoji": true
+			}
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "業務終了",
+						"emoji": true
+					},
+					"style": "danger",
+					"value": "end_work",
+					"action_id": "click_work_end"
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "休憩開始",
+						"emoji": true
+					},
+					"style": "primary",
+					"value": "start_break",
+					"action_id": "click_break_begin"
+				}
+			]
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": ":clock1: *現在のステータス*\n- ステータス: 業務中\n- 開始時刻: 09:00"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "🔧 設定 & 📊 統計",
+				"emoji": true
+			}
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "設定",
+						"emoji": true
+					},
+					"value": "open_settings",
+					"action_id": "open_settings"
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "統計",
+						"emoji": true
+					},
+					"value": "view_statistics",
+					"action_id": "view_statistics"
+				}
+			]
+		}
+	]
+}

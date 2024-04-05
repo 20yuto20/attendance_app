@@ -1,0 +1,90 @@
+{
+	"type": "modal",
+	"title": {
+		"type": "plain_text",
+		"text": "業務サマリー・業務内容記入",
+		"emoji": true
+	},
+	"submit": {
+		"type": "plain_text",
+		"text": "送信",
+		"emoji": true
+	},
+	"close": {
+		"type": "plain_text",
+		"text": "キャンセル",
+		"emoji": true
+	},
+	"blocks": [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*今回の業務時間*: 9:00 AM - 6:00 PM"
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*休憩時間*: 12:00 PM - 1:00 PM"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "input",
+			"block_id": "work_summary",
+			"label": {
+				"type": "plain_text",
+				"text": "業務内容サマリー",
+				"emoji": true
+			},
+			"element": {
+				"type": "plain_text_input",
+				"multiline": true,
+				"action_id": "work_summary_input",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "本日の業務内容の概要を記入してください",
+					"emoji": true
+				}
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "detailed_tasks",
+			"label": {
+				"type": "plain_text",
+				"text": "具体的な業務内容",
+				"emoji": true
+			},
+			"element": {
+				"type": "plain_text_input",
+				"multiline": true,
+				"action_id": "detailed_tasks_input",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "今日取り組んだ具体的なタスクを記入してください",
+					"emoji": true
+				}
+			}
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "前回の内容をコピー",
+						"emoji": true
+					},
+					"value": "copy_last_summary",
+					"action_id": "copy_last_summary_action"
+				}
+			]
+		}
+	]
+}
