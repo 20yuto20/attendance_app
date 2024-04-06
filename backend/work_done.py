@@ -16,7 +16,7 @@ import calculate_break_time #休憩時間の計算
 import manipulate_sheet #シートの操作
 
 # Slack Botのトークンを設定
-app = App(token=os.environ.get("BOT_TOKEN"))
+app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 #業務終了ボタンが押されたら時刻の打刻とモーダルを開く処理
 def work_done(ack, body, client):
@@ -65,8 +65,9 @@ def work_done(ack, body, client):
     print('稼働時間の打刻が完了しました。')
 
     #モーダルを開く
+    trigger_id = body["trigger_id"] #トリガーidの取得
     client.views_open(
-        trigger_id=body["trigger_id"],
+        trigger_id=trigger_id,
         view={
             "type": "modal",
             "callback_id": "callback_id_work_done_modal",

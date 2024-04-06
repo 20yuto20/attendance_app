@@ -13,7 +13,7 @@ import settings #設定を行った際の各種変数が格納されている
 import auth #シートの権限
 
 # Slack Botのトークンを設定
-app = App(token=os.environ.get("BOT_TOKEN"))
+app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 
 # 業務開始時刻を打刻する処理

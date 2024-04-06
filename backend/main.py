@@ -13,7 +13,7 @@ import json
 
 
 # Slack Botのトークンを設定
-app = App(token=os.environ.get("BOT_TOKEN"))
+app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 last_app_home_opened = {}
 
@@ -165,7 +165,7 @@ def handle_sheet_name_input_action(ack, body, client):
 def handle_supervisor_user_select_action(ack, body, client):
     supervisor_user_select_action(ack, body, client)
 
-#submitのイベントリスナー
+#設定モーダルのsubmitのイベントリスナー
 @app.view("callback_settings_modal")
 def handle_view_submission(ack, body, client):
     ack()
@@ -217,6 +217,19 @@ from check_status import message_events
 def handle_message_events(event, say, logger):
     message_events(event, say, logger)
 
+#-------------
+#stats.pyの処理
+#-------------
+#import settings
+#if settings.selected_language and settings.report_channel_id and settings.invoice_channel_id and settings.database_url and settings.SP_SHEET and settings.supervisor_user_id:
+    #from stats import open_stats_modal, plot_data
+    #@app.action("view_statistics")
+    #def handle_stats_func(ack, body, client):
+        #plot_data()
+        #ack()
+        #open_stats_modal(ack, body, client)
+
+
 if __name__ == "__main__":
-    handler = SocketModeHandler(app, os.environ.get("APP_TOKEN"))
+    handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     handler.start()

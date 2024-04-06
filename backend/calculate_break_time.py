@@ -3,7 +3,7 @@ from slack_bolt import App
 from datetime import datetime
 
 # Slackアプリの初期化
-app = App(token=os.environ.get("BOT_TOKEN"))
+app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 # 休憩開始時刻と終了時刻を保持する変数
 break_begin_time = None
