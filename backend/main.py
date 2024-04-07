@@ -220,16 +220,21 @@ def handle_message_events(event, say, logger):
 #-------------
 #stats.pyの処理
 #-------------
-#import settings
-#if settings.selected_language and settings.report_channel_id and settings.invoice_channel_id and settings.database_url and settings.SP_SHEET and settings.supervisor_user_id:
-    #from stats import open_stats_modal, plot_data
-    #@app.action("view_statistics")
-    #def handle_stats_func(ack, body, client):
-        #plot_data()
-        #ack()
-        #open_stats_modal(ack, body, client)
+import threading
+import settings
+from stats import open_stats_modal, plot_data
+import asyncio
 
+@app.action("view_statistics")
+async def handle_stats_func(ack, body, client):
+    # Matplotlibの処理を非同期に実行する
+    output_file, total_working_time, average_working_time = await asyncio.get_running_loop().run_in_executor(None, plot_data)
 
+    # ack()を呼び出してリクエストを受け付けたことを通知する
+    await ack()
+
+    # モーダルを開く
+    await open_stats_modal(ack, body, client, output_file, total_working_time, average_working_time)
 if __name__ == "__main__":
     handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     handler.start()

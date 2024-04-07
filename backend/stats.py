@@ -17,7 +17,7 @@ import json
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 # 統計のモーダルを開く処理
-def open_stats_modal(ack, body, client):
+def open_stats_modal(ack, body, client, output_file, total_working_time, average_working_time):
     try:
         # 統計情報を取得
         output_file, total_working_time, average_working_time = plot_data()
@@ -76,47 +76,59 @@ def open_stats_modal(ack, body, client):
         ack()
 
 
-# 統計情報を取得する処理
-def plot_data():
+def parse_japanese_date(date_str):
     try:
-        # Google Sheets API にアクセスするための認証情報を取得
-        sheet = auth()
+        parts = date_str.split('日')
+        year_month_day = parts[0]
+        weekday = parts[1].replace('曜日', '').strip()
+        date_obj = pd.to_datetime(year_month_day, format='%Y年%m月%d')
+        date_obj = date_obj.to_datetime64()
+        date_obj = date_obj.astype('datetime64[D]')
+        weekdays = ['月', '火', '水', '木', '金', '土', '日']
+        weekday_index = weekdays.index(weekday[0])
+        return date_obj + pd.Timedelta(days=weekday_index)
+    except (IndexError, ValueError):
+        # 日付文字列の形式が想定と異なる場合は、そのまま返す
+        try:
+            return pd.to_datetime(date_str)
+        except ValueError:
+            # それでも変換できない場合は None を返す
+            return None
 
-        # データを取得してDataFrameに変換
-        data = sheet.get_all_values()
-        df = pd.DataFrame(data[1:], columns=data[0])
+def plot_data():
+    # Google Sheets API にアクセスするための認証情報を取得
+    sheet = auth()
 
-        # 日付をdatetime型に変換
-        df['日付'] = pd.to_datetime(df['日付'])
+    # データを取得してDataFrameに変換
+    data = sheet.get_all_values()
+    df = pd.DataFrame(data[1:], columns=data[0])
 
-        # 指定された月のデータをフィルタリング
-        current_month = pd.Timestamp.now().month
-        df = df[df['日付'].dt.month == current_month]
+    # 日付をdatetime型に変換
+    df['日付'] = df['日付'].apply(parse_japanese_date)
 
-        # 日付別の業務時間グラフを作成
-        plt.figure(figsize=(12, 6))
-        df['稼働時間'] = df['稼働時間'].str.extract(r'(\d+)', expand=False).astype(int)
-        df.groupby('日付')['稼働時間'].sum().plot(kind='bar')
-        plt.title('日付別の業務時間')
-        plt.xlabel('日付')
-        plt.ylabel('業務時間(分)')
-        
-        # グラフをファイルとして保存
-        output_file = 'output.png'
-        plt.savefig(output_file)
-        
-        # 勤務時間の平均値・合計値を計算
-        total_working_time = df['稼働時間'].sum()
-        average_working_time = df['稼働時間'].mean()
+    # 日付が正しくパースできなかったデータを除外
+    df = df[df['日付'].notna()]
 
-        return output_file, total_working_time, average_working_time
-        
-    except Exception as e:
-        print(f"Error plotting data: {e}")
-        return None, None, None
+    # 処理が実行された日の月を取得
+    current_month = datetime.now().month
 
-# 関数を実行して結果を取得
-output_file, total_working_time, average_working_time = plot_data()
-print(f"勤務時間の合計: {total_working_time}分")
-print(f"勤務時間の平均: {average_working_time:.2f}分")
-print(f"グラフ画像の保存先: {output_file}")
+    # 処理が実行された月と同じ月のデータのみをフィルタリング
+    df = df[df['日付'].dt.month == current_month]
+
+    # 日付別の業務時間グラフを作成
+    plt.figure(figsize=(12, 6))
+    df['稼働時間'] = df['稼働時間'].str.extract(r'(\d+)', expand=False).astype(int)
+    df.groupby('日付')['稼働時間'].sum().plot(kind='bar')
+    plt.title('日付別の業務時間')
+    plt.xlabel('日付')
+    plt.ylabel('業務時間(分)')
+
+    # グラフをファイルとして保存
+    output_file = 'output.png'
+    plt.savefig(output_file)
+
+    # 勤務時間の平均値・合計値を計算
+    total_working_time = df['稼働時間'].sum()
+    average_working_time = df['稼働時間'].mean()
+
+    return output_file, total_working_time, average_working_time
