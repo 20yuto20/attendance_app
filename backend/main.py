@@ -15,15 +15,15 @@ import json
 # Slack Botのトークンを設定
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
-last_app_home_opened = {}
+#last_app_home_opened = {}
 
 @app.event("app_home_opened")
 def update_hometab(client, event, logger):
     try:
         user_id = event["user"]
-        event_time = datetime.fromtimestamp(float(event["event_time"]))
+        #event_time = datetime.fromtimestamp(float(event["event_time"]))
         if isinstance(user_id, str):  # ユーザーIDが文字列の場合のみ実行
-            if user_id not in last_app_home_opened or event_time > last_app_home_opened[user_id]:
+            #if user_id not in last_app_home_opened or event_time > last_app_home_opened[user_id]:
                 client.views_publish(
                     user_id=user_id,
                     view={
@@ -235,6 +235,7 @@ async def handle_stats_func(ack, body, client):
 
     # モーダルを開く
     await open_stats_modal(ack, body, client, output_file, total_working_time, average_working_time)
+
 if __name__ == "__main__":
     handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     handler.start()

@@ -65,7 +65,7 @@ def work_done(ack, body, client):
     print('稼働時間の打刻が完了しました。')
 
     #モーダルを開く
-    trigger_id = body["trigger_id"] #トリガーidの取得
+    trigger_id = body["trigger_id"]
     client.views_open(
         trigger_id=trigger_id,
         view={
@@ -164,6 +164,7 @@ def work_done(ack, body, client):
 # モーダルから送信された内容を処理する
 def handle_work_summary_input(ack, body, client):
     global total_break_hours, total_break_minutes
+
     # 入力内容を取得
     user_text = body["view"]["state"]["values"]["work_summary"]["work_summary_input"]["value"]
     user_detail = body["view"]["state"]["values"]["detailed_tasks"]["detailed_tasks_input"]["value"]
