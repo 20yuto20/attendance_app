@@ -6,6 +6,8 @@ from slack_sdk.errors import SlackApiError
 import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import asyncio
+import concurrent.futures
 
 
 #必要なファイルのインポート
@@ -19,54 +21,49 @@ import manipulate_sheet #シートの操作
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 #業務終了ボタンが押されたら時刻の打刻とモーダルを開く処理
-def work_done(ack, body, client):
-    timestamp2 = datetime.now() 
+async def work_done(ack, body, client):
+    timestamp2 = datetime.now()
     time2 = timestamp2.strftime('%H:%M')
 
     # ユーザーへのメッセージ送信
-    client.chat_postMessage(
+    await client.chat_postMessage(
         channel=body["user"]["id"],
         text=f'業務終了時刻：{time2}'
     )
-    
+
     # ワークシートの操作
     worksheet = auth.auth()
-    data1 = pd.DataFrame(worksheet.get_all_records())
-    data1.iloc[-1, 2] = time2
-    worksheet.update([data1.columns.values.tolist()] + data1.values.tolist())
-    print('業務終了時刻の打刻が完了しました。')
+    worksheet.update_cell(worksheet.row_count, 3, time2)
+    # print('業務終了時刻の打刻が完了しました。') # ログ出力は必要に応じて
 
     # 業務開始時刻をシートから取得
-    last_row = data1.shape[0]
-    punch_in_value = worksheet.cell(last_row + 1, 2).value
-    
+    punch_in_value = worksheet.cell(worksheet.row_count, 2).value
+
     # 稼働時間の計算及び出力
-    #休憩時間をひいて正味の稼働時間を出すロジックを組むこと
     start_time = datetime.strptime(punch_in_value, "%H:%M")
     end_time = datetime.strptime(time2, "%H:%M")
     time_diff = end_time - start_time
-    global work_hours
-    global true_work_hours
     work_hours = time_diff.seconds // 3600
-    true_work_hours = work_hours - calculate_break_time.total_break_hours
-    global work_minutes
+    global true_work_hours
     global true_work_minutes
+    true_work_hours = work_hours - calculate_break_time.total_break_hours
     work_minutes = (time_diff.seconds // 60) % 60
     true_work_minutes = work_minutes - calculate_break_time.total_break_minutes
-    client.chat_postMessage(
-        channel = body["user"]["id"],
-        text = f'稼働時間：{true_work_hours}時間{true_work_minutes}分 \n休憩時間：{calculate_break_time.total_break_hours}時間{calculate_break_time.total_break_minutes}分'
+
+    await client.chat_postMessage(
+        channel=body["user"]["id"],
+        text=f'稼働時間：{true_work_hours}時間{true_work_minutes}分\n休憩時間：{calculate_break_time.total_break_hours}時間{calculate_break_time.total_break_minutes}分'
     )
 
     # 正味の稼働時間を稼働時間カラムに記載する
     total_work_time = f"{true_work_hours}時間{true_work_minutes}分"
-    data1.iloc[-1, 3] = total_work_time
-    worksheet.update([data1.columns.values.tolist()] + data1.values.tolist())
-    print('稼働時間の打刻が完了しました。')
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        await asyncio.get_event_loop().run_in_executor(executor, worksheet.update_cell, worksheet.row_count, 4, total_work_time)
+    # print('稼働時間の打刻が完了しました。') # ログ出力は必要に応じて
 
     #モーダルを開く
     trigger_id = body["trigger_id"]
-    client.views_open(
+    await client.views_open(
         trigger_id=trigger_id,
         view={
             "type": "modal",

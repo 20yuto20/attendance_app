@@ -185,10 +185,11 @@ def handle_record_work_start(ack, body, client):
 #work_done.pyの処理
 #-----------------
 from work_done import work_done, handle_work_summary_input
+import asyncio
 @app.action("click_work_end")
-def handle_work_done(ack, body, client):
-    ack()
-    work_done(ack, body, client)
+async def handle_work_done(ack, body, client):
+    await ack()
+    await work_done(ack, body, client)
 
 @app.view("callback_id_work_done_modal")
 def handle_handle_work_summary_input(ack, body, client):
