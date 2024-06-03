@@ -10,20 +10,240 @@ import warnings
 import os
 import json
 
+import db_connection
 
-
-# Slack Botのトークンを設定
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
-#last_app_home_opened = {}
+def get_user_status(user_id, cursor):
+    query = "SELECT status FROM user_status WHERE user_id = %s"
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchone()
+    return result[0] if result else "業務外"
+
+def update_user_status(user_id, status, cursor, connection):
+    query = "INSERT INTO user_status (user_id, status) VALUES (%s, %s) ON DUPLICATE KEY UPDATE status = VALUES(status)"
+    cursor.execute(query, (user_id, status))
+    connection.commit()
 
 @app.event("app_home_opened")
 def update_hometab(client, event, logger):
     try:
         user_id = event["user"]
-        #event_time = datetime.fromtimestamp(float(event["event_time"]))
-        if isinstance(user_id, str):  # ユーザーIDが文字列の場合のみ実行
-            #if user_id not in last_app_home_opened or event_time > last_app_home_opened[user_id]:
+        
+        if isinstance(user_id, str):
+            connection = db_connection.get_db_connection()
+            cursor = connection.cursor()
+
+            # ユーザーの現在の状態を取得
+            status = get_user_status(user_id, cursor)
+
+            # 現在の状態に基づいて画面を更新
+            if status == "業務中":
+                client.views_publish(
+                    user_id=user_id,
+                    view={
+                        "type": "home",
+                        "blocks": [
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "🕒 Kotonaru勤怠管理",
+                                    "emoji": True
+                                }
+                            },
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": "勤怠管理アプリへようこそ！こちらでは、日々の業務開始・終了時間、休憩時間の記録が簡単にできます。\n\n*主な機能：*\n- 業務開始・終了の記録\n- 休憩開始・終了の記録\n- 設定のカスタマイズ\n- 勤務時間の統計閲覧"
+                                }
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "⏱ 勤怠記録",
+                                    "emoji": True
+                                }
+                            },
+                            {
+                                "type": "actions",
+                                "elements": [
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "業務終了",
+                                            "emoji": True
+                                        },
+                                        "style": "danger",
+                                        "value": "end_work",
+                                        "action_id": "click_work_end"
+                                    },
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "休憩開始",
+                                            "emoji": True
+                                        },
+                                        "style": "primary",
+                                        "value": "start_break",
+                                        "action_id": "click_break_begin"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": ":clock1: *現在のステータス*\n- ステータス: 業務中\n"
+                                }
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "🔧 設定 & 📊 統計",
+                                    "emoji": True
+                                }
+                            },
+                            {
+                                "type": "actions",
+                                "elements": [
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "設定",
+                                            "emoji": True
+                                        },
+                                        "value": "open_settings",
+                                        "action_id": "open_settings"
+                                    },
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "統計",
+                                            "emoji": True
+                                        },
+                                        "value": "view_statistics",
+                                        "action_id": "view_statistics"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                )
+            elif status == "休憩中":
+                client.views_publish(
+                    user_id=user_id,
+                    view={
+                        "type": "home",
+                        "blocks": [
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "🕒 Kotonaru勤怠管理",
+                                    "emoji": True
+                                }
+                            },
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": "勤怠管理アプリへようこそ！こちらでは、日々の業務開始・終了時間、休憩時間の記録が簡単にできます。\n\n*主な機能：*\n- 業務開始・終了の記録\n- 休憩開始・終了の記録\n- 設定のカスタマイズ\n- 勤務時間の統計閲覧"
+                                }
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "⏱ 勤怠記録",
+                                    "emoji": True
+                                }
+                            },
+                            {
+                                "type": "actions",
+                                "elements": [
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "休憩終了",
+                                            "emoji": True
+                                        },
+                                        "style": "danger",
+                                        "value": "end_break",
+                                        "action_id": "click_break_end"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": ":clock1: *現在のステータス*\n- ステータス: 休憩中\n"
+                                }
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "🔧 設定 & 📊 統計",
+                                    "emoji": True
+                                }
+                            },
+                            {
+                                "type": "actions",
+                                "elements": [
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "設定",
+                                            "emoji": True
+                                        },
+                                        "value": "open_settings",
+                                        "action_id": "open_settings"
+                                    },
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "統計",
+                                            "emoji": True
+                                        },
+                                        "value": "view_statistics",
+                                        "action_id": "view_statistics"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                )
+            else:
                 client.views_publish(
                     user_id=user_id,
                     view={
@@ -120,8 +340,76 @@ def update_hometab(client, event, logger):
                         ]
                     }
                 )
+
+            cursor.close()
+            connection.close()
+
     except Exception as e:
-        print(f"Error updating home view: {e}")
+        logger.error(f"Error updating home view: {str(e)}")
+
+# 業務開始時の処理
+@app.action("click_work_begin")
+def handle_work_begin(ack, body, client):
+    ack()
+    user_id = body["user"]["id"]
+
+    connection = db_connection.get_db_connection()
+    cursor = connection.cursor()
+
+    # punch_timeテーブルに打刻データを保存
+    record_work_start(ack, body, client)
+
+    # ユーザーのステータスを更新
+    update_user_status(user_id, "業務中", cursor, connection)
+
+    cursor.close()
+    connection.close()
+
+# 業務終了時の処理
+@app.action("click_work_end")
+def handle_work_end(ack, body, client):
+    ack()
+    user_id = body["user"]["id"]
+
+    connection = db_connection.get_db_connection()
+    cursor = connection.cursor()
+
+    # punch_timeテーブルの打刻データを更新
+    work_done(body, client)
+
+    # ユーザーのステータスを更新
+    update_user_status(user_id, "業務外", cursor, connection)
+
+    cursor.close()
+    connection.close()
+
+# 休憩開始時の処理
+@app.action("click_break_begin")
+def handle_break_begin(ack, body, client):
+    ack()
+    user_id = body["user"]["id"]
+
+    connection = db_connection.get_db_connection()
+    cursor = connection.cursor()
+
+    update_user_status(user_id, "休憩中", cursor, connection)
+
+    cursor.close()
+    connection.close()
+
+# 休憩終了時の処理
+@app.action("click_break_end")
+def handle_break_end(ack, body, client):
+    ack()
+    user_id = body["user"]["id"]
+
+    connection = db_connection.get_db_connection()
+    cursor = connection.cursor()
+
+    update_user_status(user_id, "業務中", cursor, connection)
+
+    cursor.close()
+    connection.close()
 
 #----------------
 #settings.pyの処理
@@ -187,9 +475,9 @@ def handle_record_work_start(ack, body, client):
 from work_done import work_done, handle_work_summary_input
 import asyncio
 @app.action("click_work_end")
-async def handle_work_done(ack, body, client):
-    await ack()
-    await work_done(ack, body, client)
+def handle_work_done(ack, body, client):
+    ack()
+    work_done(body, client)
 
 @app.view("callback_id_work_done_modal")
 def handle_handle_work_summary_input(ack, body, client):

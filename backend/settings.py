@@ -6,6 +6,8 @@ import gspread
 import json
 from oauth2client.service_account import ServiceAccountCredentials
 
+import db_connection # データベースに設定の値を保存
+
 # Slack Botのトークンを設定
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
@@ -162,19 +164,6 @@ def open_settings_modal(ack, body, client):
                         }
                     },
                     {
-                        "type": "input",
-                        "block_id": "block_id_sheet_name",
-                        "element": {
-                            "type": "plain_text_input",
-                            "action_id": "sheet_name_input-action"
-                        },
-                        "label": {
-                            "type": "plain_text",
-                            "text": "Googleシートのシート名を入力してください",
-                            "emoji": True
-                        }
-                    },
-                    {
                         "type": "divider"
                     },
                     {
@@ -223,9 +212,6 @@ invoice_channel_id = ""
 # モーダルで入力されたデータベースのURLを保存する変数
 database_url = ""
 
-# モーダルで入力されたシート名を保存する変数
-SP_SHEET = ""
-
 # モーダルで選択された上長（メンションする人）のIDを保存する変数
 supervisor_user_id = ""
 
@@ -233,6 +219,8 @@ supervisor_user_id = ""
 def view_submission(ack, body, logger):
     try:
         global selected_language, report_channel_id, invoice_channel_id, database_url, SP_SHEET, supervisor_user_id
+        user_id = body["user"]["id"]
+        workspace_id = body["user"]["team_id"]
 
         # 言語設定の取得
         if "block_id_language" in body["view"]["state"]["values"]:
@@ -254,15 +242,32 @@ def view_submission(ack, body, logger):
             database_url = body["view"]["state"]["values"]["block_id_database_url_id"]["url_text_input-action"]["value"]
             print(f"database_url: {database_url}")
         
-        # シート名の取得
-        if "block_id_sheet_name" in body["view"]["state"]["values"]:
-            SP_SHEET = body["view"]["state"]["values"]["block_id_sheet_name"]["sheet_name_input-action"]["value"]
-            print(f"SP_SHEET: {SP_SHEET}")
-        
         # 上長のユーザーIDの取得
         if "block_id_supervisor" in body["view"]["state"]["values"]:
             supervisor_user_id = body["view"]["state"]["values"]["block_id_supervisor"]["user_select_action"]["selected_user"]
             print(f"supervisor_user_id: {supervisor_user_id}")
+
+        connection = db_connection.get_db_connection()
+        cursor = connection.cursor()
+
+        # データベースに書く値を保存していく
+        query = """
+            INSERT INTO user_settings (user_id, workspace_id, selected_language, report_channel_id, invoice_channel_id, database_url, supervisor_user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                selected_language = VALUES(selected_language),
+                report_channel_id = VALUES(report_channel_id),
+                invoice_channel_id = VALUES(invoice_channel_id),
+                database_url = VALUES(database_url),
+                supervisor_user_id = VALUES(supervisor_user_id)
+        """
+
+        values = (user_id, workspace_id, selected_language, report_channel_id, invoice_channel_id, database_url, supervisor_user_id)
+        cursor.execute(query, values)
+        connection.commit()
+
+        cursor.close()
+        connection.close()
         
         ack()
 
@@ -275,12 +280,27 @@ def view_submission(ack, body, logger):
 # 言語設定に関するアクションの処理
 def language_select_action(ack, body, client):
     try:
+        user_id = body["user"]["id"]
+        workspace_id = body["user"]["team_id"]
         view_state = body.get("view", {}).get("state", {}).get("values", {})
+        
         if "static_select-action" in view_state:
             selected_option = view_state["static_select-action"].get("selected_option", {})
+            
             if "value" in selected_option:
-                global selected_language
                 selected_language = selected_option["value"]
+                
+                connection = db_connection.get_db_connection()
+                cursor = connection.cursor()
+
+                query = "UPDATE user_settings SET selected_language = %s WHERE user_id = %s AND workspace_id = %s"
+                values = (selected_language, user_id, workspace_id)
+                cursor.execute(query, values)
+                connection.commit()
+
+                cursor.close()
+                connection.close()
+
         ack()
     except Exception as e:
         print(f"Error in language_select_action: {e}")
@@ -289,13 +309,25 @@ def language_select_action(ack, body, client):
 # 報告用チャンネル設定に関するアクションの処理
 def report_channel_select_action(ack, body, client):
     try:
+        user_id = body["user"]["id"]
+        workspace_id = body["user"]["team_id"]
         view_state = body.get("view", {}).get("state", {}).get("values", {})
+        
         if "report_channel_select" in view_state:
             selected_channel = view_state["report_channel_select"].get("channels_select-action", {}).get("selected_channel", None)
+            
             if selected_channel:
-                global report_channel_id
-                report_channel_id = selected_channel
-                print(f"report_channel_idの値：{report_channel_id}")
+                connection = db_connection.get_db_connection()
+                cursor = connection.cursor()
+
+                query = "UPDATE user_settings SET report_channel_id = %s WHERE user_id = %s AND workspace_id = %s"
+                values = (selected_channel, user_id, workspace_id)
+                cursor.execute(query, values)
+                connection.commit()
+
+                cursor.close()
+                connection.close()
+
         ack()
     except Exception as e:
         print(f"Error in report_channel_select_action: {e}")
@@ -304,12 +336,25 @@ def report_channel_select_action(ack, body, client):
 # 請求書用チャンネル設定に関するアクションの処理
 def invoice_channel_select_action(ack, body, client):
     try:
+        user_id = body["user"]["id"]
+        workspace_id = body["user"]["team_id"]
         view_state = body.get("view", {}).get("state", {}).get("values", {})
+        
         if "invoice_channel_select" in view_state:
             selected_channel = view_state["invoice_channel_select"].get("channels_select-action", {}).get("selected_channel", None)
+            
             if selected_channel:
-                global invoice_channel_id
-                invoice_channel_id = selected_channel
+                connection = db_connection.get_db_connection()
+                cursor = connection.cursor()
+
+                query = "UPDATE user_settings SET invoice_channel_id = %s WHERE user_id = %s AND workspace_id = %s"
+                values = (selected_channel, user_id, workspace_id)
+                cursor.execute(query, values)
+                connection.commit()
+
+                cursor.close()
+                connection.close()
+
         ack()
     except Exception as e:
         print(f"Error in invoice_channel_select_action: {e}")
@@ -318,13 +363,25 @@ def invoice_channel_select_action(ack, body, client):
 # データベースURL設定に関するアクションの処理
 def database_url_input_action(ack, body, client):
     try:
+        user_id = body["user"]["id"]
+        workspace_id = body["user"]["team_id"]
         view_state = body.get("view", {}).get("state", {}).get("values", {})
+        
         if "url_text_input-action" in view_state:
             url_input = view_state["url_text_input-action"].get("url_text_input", {}).get("value", None)
+            
             if url_input:
-                global database_url
-                database_url = url_input
-                print(f"database_url変数の値：{database_url}")
+                connection = db_connection.get_db_connection()
+                cursor = connection.cursor()
+
+                query = "UPDATE user_settings SET database_url = %s WHERE user_id = %s AND workspace_id = %s"
+                values = (url_input, user_id, workspace_id)
+                cursor.execute(query, values)
+                connection.commit()
+
+                cursor.close()
+                connection.close()
+
         ack()
     except Exception as e:
         print(f"Error in database_url_input_action: {e}")
@@ -333,13 +390,25 @@ def database_url_input_action(ack, body, client):
 # シート名設定に関するアクションの処理
 def sheet_name_input_action(ack, body, client):
     try:
+        user_id = body["user"]["id"]
+        workspace_id = body["user"]["team_id"]
         view_state = body.get("view", {}).get("state", {}).get("values", {})
+        
         if "sheet_name_input-action" in view_state:
             sheet_name_input = view_state["sheet_name_input-action"].get("plain_text_input", {}).get("value", None)
+            
             if sheet_name_input:
-                global SP_SHEET
-                SP_SHEET = sheet_name_input
-                print(f"SP_SHEET変数の値：{SP_SHEET}")
+                connection = db_connection.get_db_connection()
+                cursor = connection.cursor()
+
+                query = "UPDATE user_settings SET sp_sheet = %s WHERE user_id = %s AND workspace_id = %s"
+                values = (sheet_name_input, user_id, workspace_id)
+                cursor.execute(query, values)
+                connection.commit()
+
+                cursor.close()
+                connection.close()
+
         ack()
     except Exception as e:
         print(f"Error in sheet_name_input_action: {e}")
@@ -348,12 +417,25 @@ def sheet_name_input_action(ack, body, client):
 # 報告者設定に関するアクションの処理
 def supervisor_user_select_action(ack, body, client):
     try:
+        user_id = body["user"]["id"]
+        workspace_id = body["user"]["team_id"]
         view_state = body.get("view", {}).get("state", {}).get("values", {})
+        
         if "user_select_action" in view_state:
             selected_user = view_state["user_select_action"].get("users_select-action", {}).get("users_select", None)
+            
             if selected_user:
-                global supervisor_user_id
-                supervisor_user_id = selected_user
+                connection = db_connection.get_db_connection()
+                cursor = connection.cursor()
+
+                query = "UPDATE user_settings SET supervisor_user_id = %s WHERE user_id = %s AND workspace_id = %s"
+                values = (selected_user, user_id, workspace_id)
+                cursor.execute(query, values)
+                connection.commit()
+
+                cursor.close()
+                connection.close()
+
         ack()
     except Exception as e:
         print(f"Error in supervisor_user_select_action: {e}")

@@ -1,0 +1,6 @@
+slack_bolt
+gspread
+oauth2client
+pandas
+mysql-connector-python
+serverless-wsgi

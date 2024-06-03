@@ -11,6 +11,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 #settings.pyの内容
 import settings #設定を行った際の各種変数が格納されている
 import auth #シートの権限
+import db_connection # データベースの接続のための関数が格納されている
 
 # Slack Botのトークンを設定
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
@@ -53,25 +54,55 @@ def record_work_start(ack, body, client):
 
     # 管理者に業務開始の通知
     user_id = body["user"]["id"]
+    workspace_id = body["user"]["team_id"]
     user_info = client.users_info(user=user_id)
     username = user_info["user"]["real_name"]
 
-    # ユーザーをメンションして通知
-    try:
+    connection = db_connection.get_db_connection()
+    cursor = connection.cursor()
+
+    query = "SELECT report_channel_id, supervisor_user_id FROM user_settings WHERE user_id = %s AND workspace_id = %s"
+    values = (user_id, workspace_id)
+    cursor.execute(query, values)
+    result = cursor.fetchone()
+
+    if result:
+        report_channel_id, supervisor_user_id = result    
+        # ユーザーをメンションして通知
+        try:
+            client.chat_postMessage(
+                channel=report_channel_id,
+                text=f'<@{supervisor_user_id}> {username}さんが業務を開始しました。\n業務開始時刻：{time1}'
+            )
+        except SlackApiError as e:
+            print(f"Error posting message: {e}")
+    
+    else:
+        print(f"ワークスペースID: {workspace_id}内のユーザーID: {user_id}の設定値が見つかりませんでした。")
+        # メッセージを送信
         client.chat_postMessage(
-            channel=settings.report_channel_id,
-            text=f'<@{settings.supervisor_user_id}> {username}さんが業務を開始しました。\n業務開始時刻：{time1}'
+            channel=body["user"]["id"],
+            text='設定値が見つかりませんでした'
         )
-    except SlackApiError as e:
-        print(f"Error posting message: {e}")
+
+    query = "INSERT INTO punch_time (punch_user_id, punch_workspace_id, punch_date, punch_in) VALUES (%s, %s, %s, %s)"
+    values = (user_id, workspace_id, final_date_with_weekday, time1)
+    cursor.execute(query, values)
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+    print('業務開始時刻の打刻が完了しました。') 
 
     # Google Sheetsにデータを更新
-    worksheet = auth.auth()
-    data1 = pd.DataFrame(worksheet.get_all_records())
-    new_row = pd.DataFrame({'日付': [final_date_with_weekday], '業務開始時刻': [time1], '業務終了時刻': ['xx:xx'], '稼働時間': ['xx:xx'], '業務内容': ['xxxx']})
-    data1 = pd.concat([data1, new_row], ignore_index=True)
-    worksheet.update([data1.columns.values.tolist()] + data1.values.tolist())
-    print('業務開始時刻の打刻が完了しました。')
+    #worksheet = auth.auth(user_id, workspace_id)
+    #data1 = pd.DataFrame(worksheet.get_all_records())
+    #new_row = pd.DataFrame({'日付': [final_date_with_weekday], '業務開始時刻': [time1], '業務終了時刻': ['xx:xx'], '稼働時間': ['xx:xx'], '業務内容': ['xxxx']})
+    #data1 = pd.concat([data1, new_row], ignore_index=True)
+    #worksheet.update([data1.columns.values.tolist()] + data1.values.tolist())
+    #print('業務開始時刻の打刻が完了しました。')
+
+
 
     # ホームビューを更新してステータスを "業務中" に変更し、開始時刻を表示
     try:

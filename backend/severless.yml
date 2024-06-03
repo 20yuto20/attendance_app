@@ -1,0 +1,26 @@
+service: kotonaru-attendance-app
+
+provider: 
+  name: aws
+  runtime: python 3.8
+  stage: dev
+  region: ap-northeast-1
+  enviroment:
+    SLACK_BOT_TOKEN: ${ssm:/kotonaru-attendance-app/slack-bot-token}
+    SLACK_APP_TOKEN: ${ssm:/kotonaru-attendance-app/slack-app-token}
+    DB_HOST: ${ssm:/kotonaru-attendance-app/db-host}
+    DB_USER: ${ssm:/kotonaru-attendance-app/db-user}
+    DB_PASSWORD: ${ssm:/kotonaru-attendance-app/db-password}
+    DB_NAME: ${ssm:/kotonaru-attendance-app/db-name}
+  
+functions:
+  app:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          path: /slack/events
+          method: post
+
+plugins: 
+  - serverless-wsgi
+  - serverless-python-requirements
