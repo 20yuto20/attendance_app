@@ -64,6 +64,7 @@ def work_done(body, client):
             print(f"punch_outカラムを更新しました。user_id: {user_id}, workspace_id: {workspace_id}, time2: {time2}")
 
             # 稼働時間の計算（休憩時間も含む）
+            global start_time, end_time
             start_time = datetime.strptime(punch_in_value, "%H:%M")
             end_time = datetime.strptime(time2, "%H:%M")
             time_diff = end_time - start_time
@@ -268,7 +269,7 @@ def handle_work_summary_input(ack, body, client):
         try:
             client.chat_postMessage(
                 channel=report_channel_id,
-                text=f'<@{supervisor_user_id}> {username}さんが業務を終了しました。\n{username}さんの業務時間：{true_work_hours}時間{true_work_minutes}分 \n{username}さんの休憩時間：{total_break_hours}時間{total_break_minutes}分 \n業務内容：{user_text} \n詳細：{user_detail}'
+                text=f'<@{supervisor_user_id}> {username}さんが業務を終了しました。\n{username}さんの業務開始時刻：{start_time} \n{username}さんの業務終了時刻：{end_time} \n{username}さんの正味の業務時間：{true_work_hours}時間{true_work_minutes}分 \n{username}さんの休憩時間：{total_break_hours}時間{total_break_minutes}分 \n業務内容：{user_text} \n詳細：{user_detail}'
             )
         except SlackApiError as e:
             print(f"Error posting message: {e.response['error']}")
