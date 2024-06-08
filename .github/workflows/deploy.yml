@@ -18,13 +18,21 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.PRIVATE_KEY }}
 
+    - name: Display debug information
+      run: |
+        echo "USER_NAME: ${{ secrets.USER_NAME }}"
+        echo "HOST_NAME: ${{ secrets.HOST_NAME }}"
+        echo "PRIVATE_KEY: (hidden)"
+
     - name: Copy files to EC2
       run: |
-        scp -o StrictHostKeyChecking=no -r . ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }}:/home/ec2-user/app
+        echo "Copying files to EC2"
+        scp -v -o StrictHostKeyChecking=no -r . ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }}:/home/ec2-user/app
 
     - name: Deploy application
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} << 'EOF'
+        echo "Deploying application"
+        ssh -v -o StrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} << 'EOF'
           cd /home/ec2-user/app
           docker build -t attendance_app .
           docker stop attendance_app || true
