@@ -2,6 +2,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from datetime import datetime, timedelta
 from oauth2client.service_account import ServiceAccountCredentials
+from dotenv import load_dotenv
 import gspread
 import pandas as pd
 import re
@@ -12,7 +13,13 @@ import json
 
 import db_connection
 
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+# .envファイルから環境変数を読み込む
+load_dotenv()
+
+app = App(
+    token=os.getenv("BOT_TOKEN"),
+    signing_secret=os.getenv("APP_TOKEN")
+)
 
 def get_user_status(user_id, cursor):
     query = "SELECT status FROM user_status WHERE user_id = %s"
