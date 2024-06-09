@@ -26,12 +26,22 @@ jobs:
     - name: Copy files to EC2
       run: |
         echo "Copying files to EC2"
-        scp -v -o StrictHostKeyChecking=no -r * ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }}:/home/${{ secrets.USER_NAME }}/app
+        scp -r -o StrictHostKeyChecking=no ./* ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }}:/home/${{ secrets.USER_NAME }}/app
+
+    - name: Check remote directory contents
+      run: |
+        echo "Checking remote directory contents"
+        ssh -o StrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} "ls -la /home/${{ secrets.USER_NAME }}/app/backend"
 
     - name: Deploy application
       run: |
         echo "Deploying application"
         ssh -o StrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} << 'EOF'
-          cd /home/${{ secrets.USER_NAME }}/app
+          export MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+          export MYSQL_USER=${{ secrets.MYSQL_USER }}
+          export MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          export MYSQL_DB=${{ secrets.MYSQL_DB }}
+          cd /home/${{ secrets.USER_NAME }}/app/backend
+          ls -la
           docker-compose up -d --build
         EOF
