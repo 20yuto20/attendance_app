@@ -28,23 +28,10 @@ jobs:
         echo "Copying files to EC2"
         scp -v -o StrictHostKeyChecking=no -r * ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }}:/home/${{ secrets.USER_NAME }}/app
 
-    - name: Install Docker on EC2
-      run: |
-        echo "Installing Docker"
-        ssh -o StrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} << 'EOF'
-          sudo yum update -y
-          sudo amazon-linux-extras install docker
-          sudo service docker start
-          sudo usermod -a -G docker ${{ secrets.USER_NAME }}
-        EOF
-
     - name: Deploy application
       run: |
         echo "Deploying application"
         ssh -o StrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} << 'EOF'
           cd /home/${{ secrets.USER_NAME }}/app
-          docker build -t attendance_app .
-          docker stop attendance_app || true
-          docker rm attendance_app || true
-          docker run -d --name attendance_app -p 80:80 attendance_app
+          docker-compose up -d --build
         EOF
