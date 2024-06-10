@@ -4,7 +4,10 @@ from datetime import datetime
 from db_connection import get_db_connection
 from get_total_break_duration import get_total_break_duration
 
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = App(
+    token=os.getenv("BOT_TOKEN"),
+    signing_secret=os.getenv("APP_TOKEN")
+)
 
 def handle_break_begin(ack, body, client, logger):
     ack()

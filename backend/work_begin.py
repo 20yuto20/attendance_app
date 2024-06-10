@@ -14,7 +14,10 @@ import auth #シートの権限
 import db_connection # データベースの接続のための関数が格納されている
 
 # Slack Botのトークンを設定
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = App(
+    token=os.getenv("BOT_TOKEN"),
+    signing_secret=os.getenv("APP_TOKEN")
+)
 
 
 # 業務開始時刻を打刻する処理

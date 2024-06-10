@@ -20,7 +20,10 @@ import db_connection # データベースへの接続
 from get_total_break_duration import get_total_break_duration # SQLを用いた休憩ロジックの関数
 
 # Slack Botのトークンを設定
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = App(
+    token=os.getenv("BOT_TOKEN"),
+    signing_secret=os.getenv("APP_TOKEN")
+)
 
 #業務終了ボタンが押されたら時刻の打刻とモーダルを開く処理
 def work_done(body, client):

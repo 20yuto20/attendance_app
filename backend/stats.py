@@ -14,7 +14,10 @@ import os
 import json
 
 # Slack Botのトークンを設定
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = App(
+    token=os.getenv("BOT_TOKEN"),
+    signing_secret=os.getenv("APP_TOKEN")
+)
 
 # 統計のモーダルを開く処理
 def open_stats_modal(ack, body, client, output_file, total_working_time, average_working_time):

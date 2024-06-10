@@ -9,7 +9,10 @@ from oauth2client.service_account import ServiceAccountCredentials
 import db_connection # データベースに設定の値を保存
 
 # Slack Botのトークンを設定
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = App(
+    token=os.getenv("BOT_TOKEN"),
+    signing_secret=os.getenv("APP_TOKEN")
+)
 
 #設定のモーダルを開く処理
 def open_settings_modal(ack, body, client):

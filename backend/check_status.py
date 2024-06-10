@@ -5,7 +5,10 @@ import json
 import os
 
 # Slack Botのトークンを設定
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = App(
+    token=os.getenv("BOT_TOKEN"),
+    signing_secret=os.getenv("APP_TOKEN")
+)
 
 def message_events(event, say, logger):
     try:
