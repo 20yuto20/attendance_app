@@ -533,5 +533,5 @@ async def handle_stats_func(ack, body, client):
     await open_stats_modal(ack, body, client, output_file, total_working_time, average_working_time)
 
 if __name__ == "__main__":
-    handler = SocketModeHandler(app, os.getenv["APP_TOKEN"])
+    handler = SocketModeHandler(app, os.getenv("APP_TOKEN"))
     handler.start()
