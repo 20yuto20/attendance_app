@@ -256,7 +256,7 @@ def view_submission(ack, body, logger):
         # データベースに書く値を保存していく
         query = """
             INSERT INTO user_settings (user_id, workspace_id, selected_language, report_channel_id, invoice_channel_id, database_url, supervisor_user_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
                 selected_language = VALUES(selected_language),
                 report_channel_id = VALUES(report_channel_id),
