@@ -25,7 +25,8 @@ def auth(user_id, workspace_id):
 
     if result:
         database_url = result[0]
-        SP_CREDENTIAL_FILE = '/Users/yutokohata/attendanceManagement/secretKey.json' # このパスは本番環境では別のものになる
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        SP_CREDENTIAL_FILE = os.path.join(current_dir, 'secretKey.json')
         SP_SCOPE = [
             'https://spreadsheets.google.com/feeds',
             'https://www.googleapis.com/auth/drive'
