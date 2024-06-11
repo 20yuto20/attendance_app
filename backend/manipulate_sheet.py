@@ -42,13 +42,20 @@ def update_month_sheet(user_id, workspace_id, timestamp_data):
 
         if result:
             # 対応する月のシートを取得
-            spreadsheet, gc = auth.auth(user_id, workspace_id)
-            if spreadsheet is None:
-                raise Exception(f"ユーザーID: {user_id}、ワークスペースID: {workspace_id}の設定が見つかりませんでした。")
             try:
+                spreadsheet, gc = auth.auth(user_id, workspace_id)
+                if spreadsheet is None:
+                    raise Exception(f"ユーザーID: {user_id}、ワークスペースID: {workspace_id}の設定が見つかりませんでした。")
                 month_sheet = spreadsheet.worksheet(month_sheet_name)
+            except gspread.exceptions.APIError as e:
+                print(f"Google Sheets APIエラー: {e}")
+                return
             except gspread.exceptions.WorksheetNotFound:
-                raise Exception(f"シート {month_sheet_name} が見つかりません。")
+                print(f"シート {month_sheet_name} が見つかりません。")
+                return
+            except Exception as e:
+                print(f"エラーが発生しました: {e}")
+                return
 
             # 日付に一致する行を探す
             dates = month_sheet.col_values(1)  # 日付カラムは1列目
