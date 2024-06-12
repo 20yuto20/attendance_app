@@ -10,6 +10,7 @@ app = App(
 )
 
 def handle_break_begin(ack, body, client, logger):
+    logger.info(f"handle_break_begin called with body: {body}") # 休憩開始ボタンの作動確認のデバッグ
     ack()
     user_id = body["user"]["id"]
     workspace_id = body["user"]["team_id"]

@@ -497,6 +497,7 @@ def handle_handle_work_summary_input(ack, body, client):
 from calculate_break_time import handle_break_begin, handle_break_end
 @app.action("click_break_begin")
 def handle_handle_break_begin(ack, body, client, logger):
+    logger.info(f"handle_handle_break_begin called with body: {body}") # 休憩時間のボタンが作動するかのデバッグ
     ack()
     handle_break_begin(ack, body, client, logger)
 
